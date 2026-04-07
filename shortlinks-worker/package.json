@@ -1,0 +1,14 @@
+{
+  "name": "shortlinks-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "cf:setup": "node scripts/setup-wrangler.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.11.1"
+  }
+}

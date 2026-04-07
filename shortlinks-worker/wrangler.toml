@@ -1,0 +1,10 @@
+name = "shortlinks-worker"
+main = "src/index.ts"
+compatibility_date = "2026-04-07"
+routes = [
+  { pattern = "s.museday.top/api/*", zone_name = "museday.top" }
+]
+[[kv_namespaces]]
+binding = "shortlinks"
+id = "4a75fc3e084b46d0a1df2846553b6adb"
+preview_id = "b2c2992e871d4953a43263b20b8e016e"
