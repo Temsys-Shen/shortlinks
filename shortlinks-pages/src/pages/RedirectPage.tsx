@@ -17,11 +17,12 @@ export function RedirectPage(): JSX.Element {
       setError("INVALID_CODE:短码格式不合法");
       return;
     }
+    const validCode = code;
 
     let cancelled = false;
     async function resolveShortLink() {
       try {
-        const record = await getShortLinkByCode(code);
+        const record = await getShortLinkByCode(validCode);
         if (!cancelled) {
           window.location.replace(record.url);
         }
