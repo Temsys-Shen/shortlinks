@@ -223,7 +223,7 @@ export function AdminPage(): JSX.Element {
         <button type="button" onClick={() => void handleReload()} disabled={loading}>
           {loading ? "刷新中..." : "刷新列表"}
         </button>
-        <button type="button" className="secondary" onClick={clearApiKey}>
+        <button type="button" className="secondary" onClick={() => clearApiKey()}>
           清除已保存Key
         </button>
       </div>
