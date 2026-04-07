@@ -16,10 +16,16 @@ export function AdminPage(): JSX.Element {
   const [loading, setLoading] = useState(false);
   const [runningCode, setRunningCode] = useState<string>("");
   const [error, setError] = useState<string>("");
+  const [notice, setNotice] = useState<string>("");
+
+  function getStoredApiKey(): string {
+    return (localStorage.getItem(ADMIN_KEY_STORAGE) ?? "").trim();
+  }
 
   async function loadList(): Promise<void> {
     setLoading(true);
     setError("");
+    setNotice("");
     try {
       const response = await listShortLinks(100);
       setRecords(response.items);
@@ -44,21 +50,24 @@ export function AdminPage(): JSX.Element {
   function persistApiKey(next: string): void {
     setApiKey(next);
     localStorage.setItem(ADMIN_KEY_STORAGE, next);
+    setNotice("");
   }
 
   function clearApiKey(): void {
     setApiKey("");
     localStorage.removeItem(ADMIN_KEY_STORAGE);
+    setNotice("已清除本地保存Key");
   }
 
   function promptApiKey(message: string): string | null {
-    const input = window.prompt(message, apiKey);
+    const input = window.prompt(message, getStoredApiKey());
     if (input === null) {
       return null;
     }
     const next = input.trim();
     if (!next) {
       setError("UNAUTHORIZED:API Key不能为空");
+      setNotice("");
       return null;
     }
     persistApiKey(next);
@@ -77,7 +86,7 @@ export function AdminPage(): JSX.Element {
     missingKeyMessage: string,
     invalidKeyMessage: string,
   ): Promise<void> {
-    const initialApiKey = apiKey.trim() || promptApiKey(missingKeyMessage);
+    const initialApiKey = getStoredApiKey() || promptApiKey(missingKeyMessage);
     if (!initialApiKey) {
       return;
     }
@@ -129,6 +138,7 @@ export function AdminPage(): JSX.Element {
     }
 
     setError("");
+    setNotice("");
     setRunningCode(record.code);
     try {
       await withApiKeyRetry(
@@ -153,6 +163,7 @@ export function AdminPage(): JSX.Element {
     }
 
     setError("");
+    setNotice("");
     setRunningCode(record.code);
     try {
       await withApiKeyRetry(
@@ -186,6 +197,7 @@ export function AdminPage(): JSX.Element {
         </button>
       </div>
       {error ? <p className="error-text">{error}</p> : null}
+      {notice ? <p className="muted">{notice}</p> : null}
       {!loading && !hasData ? <p className="muted">暂无数据</p> : null}
       {hasData ? (
         <div className="table-wrap">
