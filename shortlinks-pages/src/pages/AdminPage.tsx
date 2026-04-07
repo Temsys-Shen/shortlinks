@@ -27,13 +27,19 @@ export function AdminPage(): JSX.Element {
     setError("");
     setNotice("");
     try {
-      const response = await listShortLinks(100);
-      setRecords(response.items);
-      const nextDraftMap: Record<string, DraftState> = {};
-      for (const item of response.items) {
-        nextDraftMap[item.code] = { code: item.code, url: item.url };
-      }
-      setDraftMap(nextDraftMap);
+      await withApiKeyRetry(
+        async (resolvedApiKey) => {
+          const response = await listShortLinks(100, resolvedApiKey);
+          setRecords(response.items);
+          const nextDraftMap: Record<string, DraftState> = {};
+          for (const item of response.items) {
+            nextDraftMap[item.code] = { code: item.code, url: item.url };
+          }
+          setDraftMap(nextDraftMap);
+        },
+        "请输入用于查看管理列表的API Key",
+        "API Key无效或已过期，请重新输入",
+      );
     } catch (loadError) {
       setError(toErrorMessage(loadError));
     } finally {
@@ -53,10 +59,12 @@ export function AdminPage(): JSX.Element {
     setNotice("");
   }
 
-  function clearApiKey(): void {
+  function clearApiKey(showNotice = true): void {
     setApiKey("");
     localStorage.removeItem(ADMIN_KEY_STORAGE);
-    setNotice("已清除本地保存Key");
+    if (showNotice) {
+      setNotice("已清除本地保存Key");
+    }
   }
 
   function promptApiKey(message: string): string | null {
@@ -97,7 +105,7 @@ export function AdminPage(): JSX.Element {
       if (!isAuthError(operationError)) {
         throw operationError;
       }
-      clearApiKey();
+      clearApiKey(false);
       const nextApiKey = promptApiKey(invalidKeyMessage);
       if (!nextApiKey) {
         return;

@@ -6,8 +6,8 @@
 
 ## 权限规则
 
-- 创建和查询不需要权限
-- 更新和删除需要在请求头传`x-api-key`
+- 创建和跳转不需要权限
+- 列表、更新、删除需要在请求头传`x-api-key`
 - 密钥从环境变量`API_KEY`读取
 
 ## 数据结构
@@ -41,7 +41,7 @@ url:57f5...c2a1 -> demo
 1. `POST /api/shortlinks`创建
 2. `GET /api/shortlinks/:code`按短码查询
 3. `GET /api/shortlinks?code=xxx`按查询参数查单条
-4. `GET /api/shortlinks`列表查询第一页
+4. `GET /api/shortlinks`列表查询第一页，需要`x-api-key`
 5. `PUT /api/shortlinks/:code`更新，需要`x-api-key`
 6. `DELETE /api/shortlinks/:code`删除，需要`x-api-key`
 7. `GET /api/:code`短码302跳转到目标URL
@@ -91,7 +91,8 @@ curl 'https://s.museday.top/api/shortlinks/abc123'
 列表查询
 
 ```bash
-curl 'https://s.museday.top/api/shortlinks?limit=100'
+curl 'https://s.museday.top/api/shortlinks?limit=100' \
+  -H 'x-api-key: your-secret'
 ```
 
 更新

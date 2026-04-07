@@ -1,32 +1,37 @@
-import { NavLink, Route, Routes } from "react-router-dom";
+import { NavLink, Route, Routes, useLocation } from "react-router-dom";
 import { CreatePage } from "./pages/CreatePage";
 import { AdminPage } from "./pages/AdminPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { RedirectPage } from "./pages/RedirectPage";
 
 export function App(): JSX.Element {
+  const { pathname } = useLocation();
+  const isRedirectShell = /^\/[A-Za-z0-9_-]{1,64}$/.test(pathname) && pathname !== "/admin";
+
   return (
     <div className="app-shell">
-      <header className="app-header">
-        <div className="brand">
-          <h1>Shortlinks</h1>
-        </div>
-        <nav className="app-nav">
-          <NavLink
-            className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
-            to="/"
-            end
-          >
-            创建
-          </NavLink>
-          <NavLink
-            className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
-            to="/admin"
-          >
-            管理
-          </NavLink>
-        </nav>
-      </header>
+      {!isRedirectShell ? (
+        <header className="app-header">
+          <div className="brand">
+            <h1>Shortlinks</h1>
+          </div>
+          <nav className="app-nav">
+            <NavLink
+              className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
+              to="/"
+              end
+            >
+              创建
+            </NavLink>
+            <NavLink
+              className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
+              to="/admin"
+            >
+              管理
+            </NavLink>
+          </nav>
+        </header>
+      ) : null}
       <main className="main-content">
         <Routes>
           <Route path="/" element={<CreatePage />} />

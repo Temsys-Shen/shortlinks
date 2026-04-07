@@ -59,9 +59,10 @@ export async function createShortLink(input: {
   });
 }
 
-export async function listShortLinks(limit = 100): Promise<ShortLinkListResponse> {
+export async function listShortLinks(limit = 100, apiKey: string): Promise<ShortLinkListResponse> {
   return requestJson<ShortLinkListResponse>(`/shortlinks?limit=${limit}`, {
     method: "GET",
+    apiKey,
   });
 }
 

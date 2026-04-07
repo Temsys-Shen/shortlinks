@@ -52,6 +52,10 @@ export default {
         if (code) {
           return getOneShortLink(code, env);
         }
+        const authResult = ensureAdmin(request, env);
+        if (authResult) {
+          return authResult;
+        }
         return listShortLinks(searchParams, env);
       }
 
