@@ -9,8 +9,7 @@ export function App(): JSX.Element {
     <div className="app-shell">
       <header className="app-header">
         <div className="brand">
-          <h1>Shortlinks Console</h1>
-          <p>创建与管理短链接</p>
+          <h1>Shortlinks</h1>
         </div>
         <nav className="app-nav">
           <NavLink

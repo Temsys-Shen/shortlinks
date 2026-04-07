@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { ApiError, getShortLinkByCode } from "../lib/api";
 
 const CODE_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 
 export function RedirectPage(): JSX.Element {
   const { code } = useParams<{ code: string }>();
-  const [error, setError] = useState("");
+  const [, setError] = useState("");
 
   useEffect(() => {
     if (!code) {
@@ -49,16 +49,7 @@ export function RedirectPage(): JSX.Element {
 
   return (
     <section className="panel resolver">
-      <h2>短链跳转中</h2>
-      {!error ? <p className="muted">正在解析短码`{code}`...</p> : null}
-      {error ? (
-        <>
-          <p className="error-text">{error}</p>
-          <Link className="back-link" to="/">
-            回到创建页
-          </Link>
-        </>
-      ) : null}
+      正在跳转
     </section>
   );
 }

@@ -37,7 +37,6 @@ export function CreatePage(): JSX.Element {
   return (
     <section className="panel">
       <h2>创建短链接</h2>
-      <p className="muted">`url`必填，`code`选填。若`url`已存在会直接复用已有短链。</p>
       <form className="form-grid" onSubmit={handleSubmit}>
         <label>
           目标URL

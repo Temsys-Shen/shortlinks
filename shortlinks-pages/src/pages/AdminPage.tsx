@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ApiError, deleteShortLink, listShortLinks, updateShortLink } from "../lib/api";
 import type { ShortLinkRecord } from "../types";
 
@@ -39,7 +39,7 @@ export function AdminPage(): JSX.Element {
     void loadList();
   }, []);
 
-  const hasData = useMemo(() => records.length > 0, [records]);
+  const hasData = records.length > 0;
 
   function persistApiKey(next: string): void {
     setApiKey(next);
@@ -49,6 +49,52 @@ export function AdminPage(): JSX.Element {
   function clearApiKey(): void {
     setApiKey("");
     localStorage.removeItem(ADMIN_KEY_STORAGE);
+  }
+
+  function promptApiKey(message: string): string | null {
+    const input = window.prompt(message, apiKey);
+    if (input === null) {
+      return null;
+    }
+    const next = input.trim();
+    if (!next) {
+      setError("UNAUTHORIZED:API Key不能为空");
+      return null;
+    }
+    persistApiKey(next);
+    return next;
+  }
+
+  function isAuthError(input: unknown): boolean {
+    if (!(input instanceof ApiError)) {
+      return false;
+    }
+    return input.status === 401 || input.status === 403;
+  }
+
+  async function withApiKeyRetry(
+    action: (resolvedApiKey: string) => Promise<void>,
+    missingKeyMessage: string,
+    invalidKeyMessage: string,
+  ): Promise<void> {
+    const initialApiKey = apiKey.trim() || promptApiKey(missingKeyMessage);
+    if (!initialApiKey) {
+      return;
+    }
+
+    try {
+      await action(initialApiKey);
+    } catch (operationError) {
+      if (!isAuthError(operationError)) {
+        throw operationError;
+      }
+      clearApiKey();
+      const nextApiKey = promptApiKey(invalidKeyMessage);
+      if (!nextApiKey) {
+        return;
+      }
+      await action(nextApiKey);
+    }
   }
 
   function updateDraft(oldCode: string, patch: Partial<DraftState>): void {
@@ -62,11 +108,6 @@ export function AdminPage(): JSX.Element {
   }
 
   async function handleSave(record: ShortLinkRecord): Promise<void> {
-    if (!apiKey.trim()) {
-      setError("UNAUTHORIZED:请先填写API Key");
-      return;
-    }
-
     const draft = draftMap[record.code];
     if (!draft) {
       setError(`DRAFT_NOT_FOUND:${record.code}`);
@@ -90,7 +131,13 @@ export function AdminPage(): JSX.Element {
     setError("");
     setRunningCode(record.code);
     try {
-      await updateShortLink(record.code, payload, apiKey.trim());
+      await withApiKeyRetry(
+        async (resolvedApiKey) => {
+          await updateShortLink(record.code, payload, resolvedApiKey);
+        },
+        "请输入用于管理短链接的API Key",
+        "API Key无效或已过期，请重新输入",
+      );
       await loadList();
     } catch (updateError) {
       setError(toErrorMessage(updateError));
@@ -100,11 +147,6 @@ export function AdminPage(): JSX.Element {
   }
 
   async function handleDelete(record: ShortLinkRecord): Promise<void> {
-    if (!apiKey.trim()) {
-      setError("UNAUTHORIZED:请先填写API Key");
-      return;
-    }
-
     const confirmed = window.confirm(`确认删除短链${record.code}吗`);
     if (!confirmed) {
       return;
@@ -113,7 +155,13 @@ export function AdminPage(): JSX.Element {
     setError("");
     setRunningCode(record.code);
     try {
-      await deleteShortLink(record.code, apiKey.trim());
+      await withApiKeyRetry(
+        async (resolvedApiKey) => {
+          await deleteShortLink(record.code, resolvedApiKey);
+        },
+        "请输入用于管理短链接的API Key",
+        "API Key无效或已过期，请重新输入",
+      );
       await loadList();
     } catch (deleteError) {
       setError(toErrorMessage(deleteError));
@@ -122,31 +170,21 @@ export function AdminPage(): JSX.Element {
     }
   }
 
-  async function handleReload(event: FormEvent<HTMLFormElement>): Promise<void> {
-    event.preventDefault();
+  async function handleReload(): Promise<void> {
     await loadList();
   }
 
   return (
     <section className="panel">
       <h2>管理短链接</h2>
-      <form className="inline-tools" onSubmit={handleReload}>
-        <label>
-          API Key
-          <input
-            type="password"
-            value={apiKey}
-            placeholder="用于修改和删除"
-            onChange={(event) => persistApiKey(event.target.value)}
-          />
-        </label>
-        <button type="submit" disabled={loading}>
+      <div className="inline-tools">
+        <button type="button" onClick={() => void handleReload()} disabled={loading}>
           {loading ? "刷新中..." : "刷新列表"}
         </button>
         <button type="button" className="secondary" onClick={clearApiKey}>
-          清除Key
+          清除已保存Key
         </button>
-      </form>
+      </div>
       {error ? <p className="error-text">{error}</p> : null}
       {!loading && !hasData ? <p className="muted">暂无数据</p> : null}
       {hasData ? (
