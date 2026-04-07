@@ -41,6 +41,29 @@ export function AdminPage(): JSX.Element {
         "API Key无效或已过期，请重新输入",
       );
     } catch (loadError) {
+      if (
+        loadError instanceof ApiError &&
+        loadError.code === "UNAUTHORIZED" &&
+        loadError.message === "Missing x-api-key header"
+      ) {
+        clearApiKey(false);
+        const nextApiKey = promptApiKey("请输入用于查看管理列表的API Key");
+        if (nextApiKey) {
+          try {
+            const response = await listShortLinks(100, nextApiKey);
+            setRecords(response.items);
+            const nextDraftMap: Record<string, DraftState> = {};
+            for (const item of response.items) {
+              nextDraftMap[item.code] = { code: item.code, url: item.url };
+            }
+            setDraftMap(nextDraftMap);
+            return;
+          } catch (retryError) {
+            setError(toErrorMessage(retryError));
+            return;
+          }
+        }
+      }
       setError(toErrorMessage(loadError));
     } finally {
       setLoading(false);
